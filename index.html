@@ -1,399 +1,470 @@
 <!DOCTYPE html>
 <html lang="it">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Strava Calendar</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --orange: #fc4c02;
-    --orange-light: #fff0eb;
-    --bg: #f5f5f5;
-    --card: #ffffff;
-    --text: #1a1a1a;
-    --text-muted: #999;
-    --text-dim: #ccc;
-    --border: #e8e8e8;
-    --empty: #f0f0f0;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Strava Calendar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+          :root {
+                  --orange: #fc4c02;
+                  --orange-light: #fff0eb;
+                  --bg: #f5f5f5;
+                  --card: #ffffff;
+                  --text: #1a1a1a;
+                  --text-muted: #999;
+                  --text-dim: #ccc;
+                  --border: #e8e8e8;
+                  --empty: #f0f0f0;
+          }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* AUTH */
-  #auth-screen {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 40px 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-    width: 100%;
-    max-width: 360px;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.1);
-  }
-  .logo { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: var(--text); text-transform: uppercase; }
-  .logo em { color: var(--orange); font-style: normal; }
-  .auth-note { color: var(--text-muted); font-size: 12px; text-align: center; line-height: 1.6; max-width: 260px; }
-  .token-row { display: flex; gap: 8px; width: 100%; }
-  .token-row input {
-    flex: 1; background: #f8f8f8; border: 1.5px solid var(--border);
-    color: var(--text); padding: 11px 14px; border-radius: 10px;
-    font-size: 13px; font-family: inherit; outline: none;
-  }
-  .token-row input:focus { border-color: var(--orange); }
-  .btn-go {
-    background: var(--orange); color: white; border: none;
-    padding: 11px 18px; border-radius: 10px; font-size: 14px;
-    font-weight: 700; cursor: pointer; font-family: inherit;
-    transition: opacity .15s;
-  }
-  .btn-go:hover { opacity: .85; }
-  .err { color: var(--orange); font-size: 12px; display: none; }
+          /* AUTH SCREEN */
+          #auth-screen {
+                  display: flex; align-items: center; justify-content: center;
+                  min-height: 100vh; padding: 20px;
+          }
+          .auth-card {
+                  background: var(--card); border-radius: 20px;
+                  box-shadow: 0 4px 32px rgba(0,0,0,0.08);
+                  padding: 40px 36px; max-width: 420px; width: 100%; text-align: center;
+          }
+          .auth-card .logo { font-size: 28px; font-weight: 800; letter-spacing: 2px; margin-bottom: 8px; }
+          .auth-card .logo span { color: var(--orange); }
+          .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+          .auth-card input {
+                  width: 100%; padding: 12px 16px; border: 1.5px solid var(--border);
+                  border-radius: 10px; font-size: 14px; font-family: inherit;
+                  background: #fafafa; margin-bottom: 10px; outline: none; transition: border .2s;
+          }
+          .auth-card input:focus { border-color: var(--orange); background: #fff; }
+          .auth-card input.error-input { border-color: #e53e3e; }
+          .btn-orange {
+                  width: 100%; padding: 13px; background: var(--orange); color: #fff;
+                  border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+                  cursor: pointer; font-family: inherit; transition: opacity .2s; margin-top: 4px;
+          }
+          .btn-orange:hover { opacity: .88; }
+          .btn-connect {
+                  width: 100%; padding: 13px; background: var(--orange); color: #fff;
+                  border: none; border-radius: 10px; font-size: 15px; font-weight: 600;
+                  cursor: pointer; font-family: inherit; transition: opacity .2s; margin-top: 8px;
+                  display: flex; align-items: center; justify-content: center; gap: 8px;
+          }
+          .btn-connect:hover { opacity: .88; }
+          #err { color: #e53e3e; font-size: 13px; margin-top: 8px; display: none; }
+          .step-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; text-align: left; }
+          .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+          .hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; text-align: left; }
+          .hint a { color: var(--orange); text-decoration: none; }
 
-  /* APP */
-  #app-screen { display: none; width: 100%; max-width: 400px; }
+          /* STEP INDICATOR */
+          .steps { display: flex; gap: 8px; margin-bottom: 24px; }
+          .step-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
+          .step-dot.active { background: var(--orange); }
 
-  .card {
-    background: var(--card);
-    border-radius: 20px;
-    padding: 22px 18px 18px;
-    box-shadow: 0 4px 32px rgba(0,0,0,0.08);
-  }
+          /* APP */
+          #app-screen { display: none; max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
+          .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+          .top-logo { font-size: 18px; font-weight: 800; letter-spacing: 1.5px; }
+          .top-logo span { color: var(--orange); }
+          #out { background: none; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; color: var(--text-muted); cursor: pointer; font-family: inherit; }
+          #out:hover { border-color: var(--orange); color: var(--orange); }
 
-  /* Card header */
-  .c-header {
-    display: flex; align-items: flex-start;
-    justify-content: space-between; margin-bottom: 14px;
-  }
-  .month-row { display: flex; align-items: center; gap: 6px; }
-  .month-label { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--text); }
-  .nav-btn {
-    background: none; border: none; cursor: pointer;
-    color: var(--text-muted); font-size: 20px; padding: 2px 5px;
-    border-radius: 6px; line-height: 1; transition: background .15s;
-  }
-  .nav-btn:hover { background: var(--empty); }
-  .strava-chevron { width: 34px; height: 34px; }
+          .streak-card { background: var(--card); border-radius: 16px; padding: 18px 20px; margin-bottom: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); display: flex; gap: 24px; }
+          .stat { flex: 1; }
+          .stat-val { font-size: 28px; font-weight: 800; color: var(--text); }
+          .stat-unit { font-size: 14px; font-weight: 400; color: var(--text-muted); }
+          .stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
 
-  /* Stats */
-  .stats-row { display: flex; gap: 24px; margin-bottom: 18px; }
-  .stat-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
-  .stat-val { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
-  .stat-unit { font-size: 12px; font-weight: 400; color: var(--text-muted); }
+          .cal-card { background: var(--card); border-radius: 16px; padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+          .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+          .cal-nav button { background: none; border: 1.5px solid var(--border); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 16px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+          .cal-nav button:hover { border-color: var(--orange); color: var(--orange); }
+          #mlabel { font-size: 16px; font-weight: 700; }
 
-  /* Calendar */
-  .cal-wrap { display: flex; gap: 6px; align-items: flex-start; }
-  .cal-body { flex: 1; }
-  .day-hdrs { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 5px; }
-  .dh { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 3px 0; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+                         .cal-grid-wrap { display: grid; grid-template-columns: 1fr auto; gap: 0; }
+          .day-headers { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; }
+          .dh { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 2px 0; }
+          .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+          .dc { aspect-ratio: 1; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--text-muted); cursor: default; position: relative; }
+          .dc.empty { background: transparent; }
+          .dc.no-act { background: var(--empty); }
+          .dc.future { background: transparent; color: var(--text-dim); }
+          .dc.act { background: var(--orange-light); cursor: pointer; transition: background .15s; }
+          .dc.act:hover { background: #ffddd0; }
+          .dc.is-today { background: var(--orange); color: #fff; font-weight: 700; }
+          .act-ico { font-size: 18px; line-height: 1; }
+          .multi { position: absolute; top: 2px; right: 3px; font-size: 9px; font-weight: 700; color: var(--orange); }
+          .dc.is-today .multi { color: #fff; }
 
-  .dc {
-    aspect-ratio: 1;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 500;
-    position: relative;
-    transition: opacity .15s;
-  }
-  .dc.empty { background: none; }
-  .dc.no-act { border: 1.5px solid var(--border); color: var(--text-dim); }
-  .dc.future { border: 1.5px solid #ebebeb; color: #ddd; }
-  .dc.act {
-    background: var(--text); color: white;
-    cursor: pointer; font-size: 0;
-  }
-  .dc.act:hover { background: #333; }
-  .dc.is-today { background: var(--orange) !important; color: white !important; }
-  .act-ico { font-size: 13px; line-height: 1; }
-  .multi {
-    position: absolute; top: -1px; right: -1px;
-    width: 13px; height: 13px; background: var(--orange);
-    border-radius: 50%; font-size: 8px; font-weight: 700;
-    color: white; display: flex; align-items: center; justify-content: center;
-  }
+          .streak-col { display: flex; flex-direction: column; gap: 3px; padding-left: 8px; padding-top: 18px; }
+          .sw { width: 22px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 14px; }
+          .sw.done { color: #48bb78; }
+          .sw.fire { }
+          .sw.nope { }
 
-  /* Streak col */
-  .streak-col { display: flex; flex-direction: column; gap: 4px; padding-top: 28px; width: 30px; flex-shrink: 0; }
-  .sw {
-    width: 30px; height: 30px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center; font-size: 13px;
-  }
-  .sw.done { background: var(--orange-light); color: var(--orange); }
-  .sw.fire { background: var(--orange); font-size: 16px; }
-  .sw.nope { background: var(--empty); }
+          #ld { display: flex; align-items: center; justify-content: center; height: 120px; font-size: 14px; color: var(--text-muted); gap: 8px; }
+          .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin .7s linear infinite; }
+          @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Detail */
-  .detail {
-    display: none; margin-top: 14px;
-    border-top: 1px solid var(--border); padding-top: 14px;
-    animation: up .2s ease;
-  }
-  .detail.on { display: block; }
-  @keyframes up { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-  .det-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .det-date { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--text-muted); }
-  .det-x { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1; }
-  .det-list { display: flex; flex-direction: column; gap: 10px; }
-  .det-row { display: flex; align-items: center; gap: 10px; }
-  .det-ico {
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--text); display: flex; align-items: center;
-    justify-content: center; font-size: 17px; flex-shrink: 0;
-  }
-  .det-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .det-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 10px; }
+          #det { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-radius: 20px 20px 0 0; padding: 20px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); transform: translateY(100%); transition: transform .3s; z-index: 10; max-width: 520px; margin: 0 auto; }
+          #det.on { transform: translateY(0); }
+          .det-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+          #ddate { font-weight: 700; font-size: 15px; }
+          #dx { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); }
+          .det-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+          .det-row:last-child { border-bottom: none; }
+          .det-ico { font-size: 22px; }
+          .det-name { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+          .det-meta { display: flex; flex-wrap: wrap; gap: 8px; }
+          .det-meta span { font-size: 12px; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 20px; }
+        </style>
+  </head>
+  <body>
 
-  /* Footer */
-  .footer { text-align: center; margin-top: 14px; font-size: 10px; font-weight: 800; letter-spacing: 3px; color: #ccc; text-transform: uppercase; }
-
-  /* Loading */
-  .ld { display: flex; align-items: center; justify-content: center; padding: 36px 0; gap: 10px; color: var(--text-muted); font-size: 13px; }
-  .spin { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: s .7s linear infinite; }
-  @keyframes s { to{transform:rotate(360deg)} }
-</style>
-</head>
-<body>
-
-<div id="auth-screen">
-  <div class="logo">STR<em>A</em>VA</div>
-  <p class="auth-note">
-    Incolla il tuo <strong style="color:#333">Access Token</strong> Strava.<br>
-    Trovalo su <a href="https://www.strava.com/settings/api" target="_blank" style="color:var(--orange);font-weight:600;text-decoration:none">strava.com/settings/api</a>
-  </p>
-  <div class="token-row">
-    <input type="password" id="tok" placeholder="Access Token…">
-    <button class="btn-go" id="go">Entra</button>
-  </div>
-  <p class="err" id="err">Token non valido. Riprovare.</p>
-</div>
-
-<div id="app-screen">
-  <div class="card">
-    <div class="c-header">
-      <div>
-        <div class="month-row">
-          <button class="nav-btn" id="prev">‹</button>
-          <div class="month-label" id="mlabel">—</div>
-          <button class="nav-btn" id="next">›</button>
+    <!-- AUTH -->
+    <div id="auth-screen">
+        <div class="auth-card">
+              <div class="logo">STR<span>A</span>VA</div>div>
+        
+            <!-- STEP 1: Credenziali -->
+            <div id="step1">
+                  <p>Inserisci le tue credenziali API Strava.<br>Le trovi su <a href="https://www.strava.com/settings/api" target="_blank" style="color:var(--orange)">strava.com/settings/api</a>a></p>
+                  <div class="step-label">Client ID</div>div>
+                  <input type="text" id="inp-cid" placeholder="es. 197813" autocomplete="off">
+                  <div class="step-label">Client Secret</div>div>
+                  <input type="password" id="inp-cs" placeholder="Il tuo Client Secret">
+                  <button class="btn-orange" id="btn-step1">Continua →</button>button>
+                  <div id="err" style="display:none"></div>div>
+            </div>div>
+        
+            <!-- STEP 2: Autorizza -->
+            <div id="step2" style="display:none">
+                  <p>Clicca il pulsante per autorizzare l'app su Strava. Verrai reindirizzato e poi tornerai qui automaticamente.</p>
+                  <button class="btn-connect" id="btn-auth">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>svg>
+                          Connetti con Strava
+                  </button>button>
+                  <button class="btn-orange" id="btn-back" style="background:#f0f0f0;color:#666;margin-top:8px;">← Indietro</button>button>
+            </div>div>
+        
+            <!-- STEP 3: Callback in corso -->
+            <div id="step3" style="display:none">
+                  <p>Scambio del codice in corso…</p>
+                  <div class="spinner" style="margin:20px auto"></div>div>
+                  <div id="err3" style="color:#e53e3e;font-size:13px;margin-top:12px;display:none"></div>div>
+            </div>div>
+        </div>div>
+    </div>div>
+  
+  <!-- APP -->
+  <div id="app-screen">
+    <div class="top-bar">
+        <div class="top-logo">STR<span>A</span>VA</div>div>
+        <button id="out">esci</button>button>
+    </div>div>
+    <div class="streak-card">
+        <div class="stat"><div class="stat-val" id="s-streak">—</div>div><div class="stat-lbl">La tua serie di attività — settimane</div>div></div>div>
+        <div class="stat"><div class="stat-val" id="s-acts">—</div>div><div class="stat-lbl">Attività delle serie</div>div></div>div>
+    </div>div>
+    <div class="cal-card">
+        <div class="cal-nav">
+              <button id="prev">‹</button>button>
+              <span id="mlabel"></span>
+              <button id="next">›</button>button>
+        </div>div>
+        <div class="day-headers" id="dhdrs"></div>div>
+        <div class="cal-grid-wrap">
+              <div>
+                        <div class="cal-grid" id="cgrid"></div>
+              </div>
+                <div class="streak-col" id="scol"></div>
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <button id="out" style="background:none;border:none;font-size:11px;color:#ccc;cursor:pointer;font-family:inherit">esci</button>
-        <svg class="strava-chevron" viewBox="0 0 34 34" fill="none">
-          <path d="M19 7 L26 20 H21 L26 30" stroke="#fc4c02" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M19 7 L12 20 H17 L12 30" stroke="#fc4c02" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.4"/>
-        </svg>
-      </div>
-    </div>
-
-    <div class="stats-row">
-      <div>
-        <div class="stat-lbl">La tua serie di attività</div>
-        <div class="stat-val" id="s-streak">—<span class="stat-unit"> settimane</span></div>
-      </div>
-      <div>
-        <div class="stat-lbl">Attività delle serie</div>
-        <div class="stat-val" id="s-acts">—</div>
-      </div>
-    </div>
-
-    <div class="ld" id="ld"><div class="spin"></div> Caricamento…</div>
-
-    <div id="calsec" style="display:none">
-      <div class="cal-wrap">
-        <div class="cal-body">
-          <div class="day-hdrs" id="dhdrs"></div>
-          <div class="cal-grid" id="cgrid"></div>
-        </div>
-        <div class="streak-col" id="scol"></div>
-      </div>
-      <div class="detail" id="det">
-        <div class="det-hdr">
-          <span class="det-date" id="ddate"></span>
-          <button class="det-x" id="dx">×</button>
-        </div>
-        <div class="det-list" id="dlist"></div>
-      </div>
+          <div id="ld"><div class="spinner"></div> Caricamento…</div>
+          <div id="calsec" style="display:none"></div>
     </div>
   </div>
-  <div class="footer">STRAVA</div>
-</div>
 
-<script>
-const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
-const MONTHS_S = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
-const DAYS = ['L','M','M','G','V','S','D'];
-const EMOJIS = {Run:'🏃',VirtualRun:'🏃',Ride:'🚴',VirtualRide:'🚴',EBikeRide:'🚴',Swim:'🏊',Walk:'🚶',Hike:'🥾',WeightTraining:'🏋️',Workout:'💪',Yoga:'🧘'};
-const emo = t => EMOJIS[t] || '🏅';
+    <!-- DETAIL PANEL -->
+    <div id="det">
+        <div class="det-hdr"><span id="ddate"></span><button id="dx">×</button>button></div>
+        <div id="dlist"></div>
+    </div>
 
-let year, month, acts = [];
+    <script>
+      const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+      const MONTHS_S = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+      const DAYS = ['L','M','M','G','V','S','D'];
+      const EMOJIS = {Run:'🏃',VirtualRun:'🏃',Ride:'🚴',VirtualRide:'🚴',EBikeRide:'🚴',Swim:'🏊',Walk:'🚶',Hike:'🥾',WeightTraining:'🏋️',Workout:'💪',Yoga:'🧘'};
+      const emo = t => EMOJIS[t] || '🏅';
 
-const $ = id => document.getElementById(id);
-const tok = () => localStorage.getItem('_sv');
-const saveTok = t => localStorage.setItem('_sv', t);
-const clear = () => { localStorage.removeItem('_sv'); localStorage.removeItem('_sva'); };
+      let year, month, acts = [];
+      const $ = id => document.getElementById(id);
 
-// Auth
-$('go').onclick = doAuth;
-$('tok').onkeydown = e => { if(e.key==='Enter') doAuth(); };
+      // Storage helpers
+      const LS = {
+          get: k => localStorage.getItem(k),
+          set: (k,v) => localStorage.setItem(k, v),
+          del: k => localStorage.removeItem(k),
+          clear: () => { ['_sv_cid','_sv_cs','_sv_tok','_sv_ref','_sv_exp'].forEach(k => localStorage.removeItem(k)); }
+      };
 
-async function doAuth() {
-  const v = $('tok').value.trim(); if(!v) return;
-  $('go').textContent = '…';
-  try {
-    const r = await fetch('https://www.strava.com/api/v3/athlete', { headers:{Authorization:`Bearer ${v}`} });
-    if(!r.ok) throw 0;
-    saveTok(v);
-    start();
-  } catch { $('err').style.display='block'; $('go').textContent='Entra'; }
-}
+      // OAuth config
+      const REDIRECT = 'https://gius23.github.io/StravaFrame/';
+      const SCOPE = 'read,activity:read_all';
 
-$('out').onclick = () => { clear(); location.reload(); };
+      function getCid() { return LS.get('_sv_cid'); }
+      function getCs()  { return LS.get('_sv_cs'); }
+      function getRef() { return LS.get('_sv_ref'); }
+      function getTok() { return LS.get('_sv_tok'); }
+      function getExp() { return parseInt(LS.get('_sv_exp') || '0'); }
 
-window.onload = () => { if(tok()) start(); };
+      function saveCreds(cid, cs) { LS.set('_sv_cid', cid); LS.set('_sv_cs', cs); }
+      function saveTokens(access, refresh, exp) {
+          LS.set('_sv_tok', access);
+          LS.set('_sv_ref', refresh);
+          LS.set('_sv_exp', String(exp));
+      }
 
-function start() {
-  $('auth-screen').style.display = 'none';
-  $('app-screen').style.display = 'block';
-  const now = new Date(); year = now.getFullYear(); month = now.getMonth();
-  $('prev').onclick = () => { month--; if(month<0){month=11;year--;} render(); };
-  $('next').onclick = () => { month++; if(month>11){month=0;year++;} render(); };
-  load();
-}
+      async function getValidToken() {
+          const now = Math.floor(Date.now()/1000);
+          if (getTok() && getExp() > now + 60) return getTok();
+          // Refresh
+          const ref = getRef();
+          const cid = getCid();
+          const cs = getCs();
+        if (!ref || !cid || !cs) return null;
+          try {
+                const r = await fetch('https://www.strava.com/oauth/token', {
+                        method: 'POST',
+                        headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({client_id: cid, client_secret: cs, grant_type: 'refresh_token', refresh_token: ref})
+                });
+                if (!r.ok) return null;
+                const d = await r.json();
+                saveTokens(d.access_token, d.refresh_token, d.expires_at);
+                return d.access_token;
+          } catch { return null; }
+      }
 
-async function load() {
-  $('ld').style.display='flex'; $('calsec').style.display='none';
-  const after = Math.floor(new Date(new Date().getFullYear()-2,0,1)/1000);
-  try {
-    let p=1, all=[];
-    while(true) {
-      const r = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=100&page=${p}`,{headers:{Authorization:`Bearer ${tok()}`}});
-      if(!r.ok){clear();location.reload();return;}
-      const d = await r.json();
-      if(!d.length) break;
-      all = all.concat(d);
-      if(d.length<100) break;
-      p++;
-    }
-    acts = all;
-    render();
-  } catch { $('ld').innerHTML='<span style="color:var(--orange)">Errore</span>'; }
-}
+      // UI helpers
+      function showStep(n) {
+          $('step1').style.display = n===1 ? '' : 'none';
+          $('step2').style.display = n===2 ? '' : 'none';
+          $('step3').style.display = n===3 ? '' : 'none';
+      }
 
-function render() {
-  $('ld').style.display='none'; $('calsec').style.display='block';
-  $('det').classList.remove('on');
-  $('mlabel').textContent = `${MONTHS[month]} ${year}`;
+      // Step 1: salva credenziali e vai a step 2
+      $('btn-step1').onclick = () => {
+          const cid = $('inp-cid').value.trim();
+          const cs  = $('inp-cs').value.trim();
+          if (!cid || !cs) { showErr('Inserisci Client ID e Client Secret.'); return; }
+        saveCreds(cid, cs);
+          showStep(2);
+      };
 
-  const today = new Date();
-  const mActs = acts.filter(a => { const d=new Date(a.start_date_local); return d.getFullYear()===year&&d.getMonth()===month; });
-  const byDay = {};
-  mActs.forEach(a => { const d=new Date(a.start_date_local).getDate(); (byDay[d]=byDay[d]||[]).push(a); });
+      $('btn-back').onclick = () => showStep(1);
 
-  // Streak stats
-  calcStreak();
+      // Step 2: redirect OAuth
+      $('btn-auth').onclick = () => {
+          const cid = getCid();
+          const url = `https://www.strava.com/oauth/authorize?client_id=${cid}&redirect_uri=${encodeURIComponent(REDIRECT)}&response_type=code&approval_prompt=auto&scope=${SCOPE}`;
+          window.location.href = url;
+      };
 
-  // Day headers
-  $('dhdrs').innerHTML = DAYS.map(d=>`<div class="dh">${d}</div>`).join('');
+      function showErr(msg) {
+          const e = $('err');
+          e.textContent = msg;
+          e.style.display = 'block';
+      }
 
-  // Grid
-  const grid = $('cgrid'); grid.innerHTML='';
-  let off = new Date(year,month,1).getDay()-1; if(off<0) off=6;
-  const dim = new Date(year,month+1,0).getDate();
-  const rows = Math.ceil((off+dim)/7);
+      // Callback: se c'è ?code= nella URL, scambia il codice
+      async function handleCallback() {
+          const params = new URLSearchParams(window.location.search);
+          const code = params.get('code');
+          const error = params.get('error');
 
-  for(let i=0;i<off;i++) { const e=document.createElement('div'); e.className='dc empty'; grid.appendChild(e); }
+          if (error) {
+                // Utente ha negato l'accesso
+                  history.replaceState(null, '', REDIRECT);
+                showStep(1);
+                showErr('Accesso negato. Riprova.');
+                return;
+          }
 
-  for(let d=1;d<=dim;d++) {
-    const el = document.createElement('div');
-    const a = byDay[d]||[];
-    const isTod = today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
-    const isFut = new Date(year,month,d)>today;
+          if (code) {
+                showStep(3);
+                try {
+                        const cid = getCid();
+                        const cs  = getCs();
+                        if (!cid || !cs) throw new Error('Credenziali mancanti');
+                        const r = await fetch('https://www.strava.com/oauth/token', {
+                                  method: 'POST',
+                                  headers: {'Content-Type':'application/json'},
+                                  body: JSON.stringify({client_id: cid, client_secret: cs, code: code, grant_type: 'authorization_code'})
+                        });
+                        if (!r.ok) throw new Error('Errore scambio token');
+                        const d = await r.json();
+                        saveTokens(d.access_token, d.refresh_token, d.expires_at);
+                        // Rimuovi il code dalla URL
+                        history.replaceState(null, '', REDIRECT);
+                        start();
+                } catch(e) {
+                        $('err3').textContent = 'Errore: ' + e.message + '. Riprova.';
+                        $('err3').style.display = 'block';
+                        setTimeout(() => { LS.clear(); location.reload(); }, 3000);
+                }
+                return;
+          }
+      }
 
-    if(isTod) {
-      el.className = 'dc is-today';
-      if(a.length) { el.innerHTML=`<span class="act-ico">${emo(a[0].sport_type||a[0].type)}</span>`; el.style.fontSize='0'; }
-      else el.textContent=d;
-    } else if(a.length) {
-      el.className='dc act';
-      el.innerHTML=`<span class="act-ico">${emo(a[0].sport_type||a[0].type)}</span>`;
-      if(a.length>1) { const b=document.createElement('div'); b.className='multi'; b.textContent=a.length; el.appendChild(b); }
-      el.onclick=()=>showDet(d,a);
-    } else if(isFut) {
-      el.className='dc future'; el.textContent=d;
-    } else {
-      el.className='dc no-act'; el.textContent=d;
-    }
-    grid.appendChild(el);
-  }
+      // Logout
+      $('out').onclick = () => { LS.clear(); location.reload(); };
 
-  const rem = rows*7-off-dim;
-  for(let i=0;i<rem;i++){const e=document.createElement('div');e.className='dc empty';grid.appendChild(e);}
+      // Startup
+      window.onload = async () => {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('code') || params.get('error')) {
+                await handleCallback();
+          return;
+          }
+          if (getRef() && getCid() && getCs()) {
+                // Abbiamo già le credenziali, proviamo a ottenere un token
+                const tok = await getValidToken();
+                if (tok) { start(); return; }
+                // Token non rinnovabile, reset
+                LS.clear();
+          }
+          // Mostra auth
+          $('auth-screen').style.display = 'flex';
+          // Pre-popola se c'erano credenziali parziali
+          if (getCid()) $('inp-cid').value = getCid();
+          showStep(1);
+      };
 
-  // Streak col
-  const sc=$('scol'); sc.innerHTML='';
-  for(let row=0;row<rows;row++){
-    const s=row*7+1-off, e=(row+1)*7-off;
-    let hasA=false;
-    for(let c=s;c<=e;c++){if(c>=1&&c<=dim&&byDay[c]&&byDay[c].length){hasA=true;break;}}
-    const todInRow=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()>=s&&today.getDate()<=e;
-    const el=document.createElement('div'); el.className='sw';
-    if(todInRow&&hasA){el.classList.add('fire');el.innerHTML='🔥';}
-    else if(hasA){el.classList.add('done');el.innerHTML='✓';}
-    else{el.classList.add('nope');}
-    sc.appendChild(el);
-  }
-}
+      function start() {
+          $('auth-screen').style.display = 'none';
+          $('app-screen').style.display = 'block';
+          const now = new Date();
+          year = now.getFullYear();
+          month = now.getMonth();
+        $('prev').onclick = () => { month--; if(month<0){month=11;year--;} render(); };
+          $('next').onclick = () => { month++; if(month>11){month=0;year++;} render(); };
+          load();
+      }
 
-function calcStreak(){
-  const getMonday=d=>{const day=d.getDay(),diff=day===0?-6:1-day,m=new Date(d);m.setDate(d.getDate()+diff);m.setHours(0,0,0,0);return m;};
-  let streak=0,total=0,ws=getMonday(new Date());
-  for(let w=0;w<104;w++){
-    const we=new Date(ws);we.setDate(ws.getDate()+6);we.setHours(23,59,59,999);
-    const wa=acts.filter(a=>{const d=new Date(a.start_date_local);return d>=ws&&d<=we;});
-    if(wa.length){streak++;total+=wa.length;ws.setDate(ws.getDate()-7);}
-    else if(w===0){ws.setDate(ws.getDate()-7);}
-    else break;
-  }
-  $('s-streak').innerHTML=`${streak}<span class="stat-unit"> settimane</span>`;
-  $('s-acts').textContent=total;
-}
+      async function load() {
+          $('ld').style.display = 'flex';
+          $('calsec').style.display = 'none';
+          const after = Math.floor(new Date(new Date().getFullYear()-2,0,1)/1000);
+          try {
+                const tok = await getValidToken();
+                if (!tok) { LS.clear(); location.reload(); return; }
+                let p=1, all=[];
+                while(true) {
+                        const r = await fetch(`https://www.strava.com/api/v3/athlete/activities?after=${after}&per_page=100&page=${p}`,{headers:{Authorization:`Bearer ${tok}`}});
+                        if (!r.ok) { LS.clear(); location.reload(); return; }
+                        const d = await r.json();
+            if (!d.length) break;
+                        all = all.concat(d);
+                        if (d.length < 100) break;
+                        p++;
+                }
+                acts = all;
+                render();
+        } catch {
+                $('ld').innerHTML = '<span style="color:var(--orange)">Errore di rete. Ricarica la pagina.</span>';
+          }
+      }
 
-function showDet(day, a){
-  $('ddate').textContent=`${day} ${MONTHS_S[month]} ${year}`;
-  const list=$('dlist'); list.innerHTML='';
-  a.forEach(x=>{
-    const dist=x.distance?`${(x.distance/1000).toFixed(2)} km`:null;
-    const time=x.moving_time?fmtT(x.moving_time):null;
-    const pace=(x.sport_type==='Run'||x.type==='Run')&&x.distance&&x.moving_time?fmtP(x.moving_time/(x.distance/1000))+'/km':null;
-    const elev=x.total_elevation_gain?`↑${Math.round(x.total_elevation_gain)}m`:null;
-    const metas=[dist,time,pace||elev].filter(Boolean);
-    const row=document.createElement('div'); row.className='det-row';
-    row.innerHTML=`<div class="det-ico">${emo(x.sport_type||x.type)}</div>
-      <div style="flex:1;min-width:0">
-        <div class="det-name">${x.name}</div>
-        <div class="det-meta">${metas.map(m=>`<span>${m}</span>`).join('')}</div>
-      </div>`;
-    list.appendChild(row);
-  });
-  $('det').classList.add('on');
-}
+      function render() {
+          $('ld').style.display = 'none';
+          $('calsec').style.display = 'block';
+          $('det').classList.remove('on');
+          $('mlabel').textContent = `${MONTHS[month]} ${year}`;
+          const today = new Date();
+          const mActs = acts.filter(a => { const d=new Date(a.start_date_local); return d.getFullYear()===year&&d.getMonth()===month; });
+          const byDay = {};
+          mActs.forEach(a => { const d=new Date(a.start_date_local).getDate(); (byDay[d]=byDay[d]||[]).push(a); });
+          calcStreak();
+          $('dhdrs').innerHTML = DAYS.map(d=>`<div class="dh">${d}</div>`).join('');
+          const grid = $('cgrid');
+          grid.innerHTML = '';
+          let off = new Date(year,month,1).getDay()-1;
+          if (off<0) off=6;
+          const dim = new Date(year,month+1,0).getDate();
+          const rows = Math.ceil((off+dim)/7);
+          for(let i=0;i<off;i++){const e=document.createElement('div');e.className='dc empty';grid.appendChild(e);}
+          for(let d=1;d<=dim;d++){
+                const el=document.createElement('div');
+                const a=byDay[d]||[];
+                const isTod=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()===d;
+                const isFut=new Date(year,month,d)>today;
+                if(isTod){el.className='dc is-today';if(a.length){el.innerHTML=`<span class="act-ico">${emo(a[0].sport_type||a[0].type)}</span>`;el.style.fontSize='0';}else el.textContent=d;}
+                else if(a.length){el.className='dc act';el.innerHTML=`<span class="act-ico">${emo(a[0].sport_type||a[0].type)}</span>`;if(a.length>1){const b=document.createElement('div');b.className='multi';b.textContent=a.length;el.appendChild(b);}el.onclick=()=>showDet(d,a);}
+                else if(isFut){el.className='dc future';el.textContent=d;}
+                else{el.className='dc no-act';el.textContent=d;}
+                grid.appendChild(el);
+          }
+          const rem=rows*7-off-dim;
+          for(let i=0;i<rem;i++){const e=document.createElement('div');e.className='dc empty';grid.appendChild(e);}
+          const sc=$('scol');
+          sc.innerHTML='';
+          for(let row=0;row<rows;row++){
+                const s=row*7+1-off,e=(row+1)*7-off;
+                let hasA=false;
+                for(let c=s;c<=e;c++){if(c>=1&&c<=dim&&byDay[c]&&byDay[c].length){hasA=true;break;}}
+                const todInRow=today.getFullYear()===year&&today.getMonth()===month&&today.getDate()>=s&&today.getDate()<=e;
+                const el=document.createElement('div');
+                el.className='sw';
+                if(todInRow&&hasA){el.classList.add('fire');el.innerHTML='🔥';}
+                else if(hasA){el.classList.add('done');el.innerHTML='✓';}
+                else{el.classList.add('nope');}
+                sc.appendChild(el);
+          }
+      }
 
-$('dx').onclick=()=>$('det').classList.remove('on');
+      function calcStreak(){
+          const getMonday=d=>{const day=d.getDay(),diff=day===0?-6:1-day,m=new Date(d);m.setDate(d.getDate()+diff);m.setHours(0,0,0,0);return m;};
+          let streak=0,total=0,ws=getMonday(new Date());
+          for(let w=0;w<104;w++){
+                const we=new Date(ws);we.setDate(ws.getDate()+6);we.setHours(23,59,59,999);
+                const wa=acts.filter(a=>{const d=new Date(a.start_date_local);return d>=ws&&d<=we;});
+                if(wa.length){streak++;total+=wa.length;ws.setDate(ws.getDate()-7);}
+                else if(w===0){ws.setDate(ws.getDate()-7);}
+                else break;
+          }
+          $('s-streak').innerHTML=`${streak}<span class="stat-unit"> settimane</span>`;
+          $('s-acts').textContent=total;
+      }
 
-function fmtT(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;}
-function fmtP(spk){const m=Math.floor(spk/60),s=Math.round(spk%60);return `${m}:${String(s).padStart(2,'0')}`;}
-</script>
-</body>
-</html>
+      function showDet(day,a){
+          $('ddate').textContent=`${day} ${MONTHS_S[month]} ${year}`;
+          const list=$('dlist');
+          list.innerHTML='';
+          a.forEach(x=>{
+                const dist=x.distance?`${(x.distance/1000).toFixed(2)} km`:null;
+                const time=x.moving_time?fmtT(x.moving_time):null;
+                const pace=(x.sport_type==='Run'||x.type==='Run')&&x.distance&&x.moving_time?fmtP(x.moving_time/(x.distance/1000))+'/km':null;
+                const elev=x.total_elevation_gain?`↑${Math.round(x.total_elevation_gain)}m`:null;
+                const metas=[dist,time,pace||elev].filter(Boolean);
+                const row=document.createElement('div');
+                row.className='det-row';
+                row.innerHTML=`<div class="det-ico">${emo(x.sport_type||x.type)}</div><div style="flex:1;min-width:0"><div class="det-name">${x.name}</div><div class="det-meta">${metas.map(m=>`<span>${m}</span>`).join('')}</div></div>`;
+                list.appendChild(row);
+          });
+          $('det').classList.add('on');
+      }
+      $('dx').onclick=()=>$('det').classList.remove('on');
+      function fmtT(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;}
+      function fmtP(spk){const m=Math.floor(spk/60),s=Math.round(spk%60);return `${m}:${String(s).padStart(2,'0')}`;}
+    </script>
+  </body>
+</html>html>
+    </script>
+              </div></p></p></span>
+  </body>
+    </style></title>
+  </head>
