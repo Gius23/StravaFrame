@@ -1,170 +1,159 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Strava Calendar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strava Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-    }
+<style>
+body{font-family:Inter,sans-serif;background:#f5f5f5;margin:0}
+#app{max-width:420px;margin:auto;padding:20px}
 
-    #app { padding: 20px; max-width: 420px; margin: auto; }
+h2{text-align:center;margin-bottom:10px}
 
-    h2 { text-align: center; font-weight: 600; }
+.weekdays{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+text-align:center;
+font-size:12px;
+color:#999;
+margin-bottom:10px
+}
 
-    .weekdays {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      margin-bottom: 10px;
-      text-align: center;
-      font-size: 12px;
-      color: #888;
-    }
+.calendar{
+display:grid;
+grid-template-columns:repeat(7,1fr);
+gap:10px
+}
 
-    .calendar {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 10px;
-    }
+.day-wrap{display:flex;justify-content:center;position:relative}
 
-    .day {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      color: #444;
-      margin: auto;
-    }
+.day{
+width:44px;
+height:44px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:14px;
+color:#444;
+position:relative
+}
 
-    .inactive { color: #bbb; }
+.inactive{color:#ccc}
 
-    .active {
-      background: #000;
-      color: white;
-      font-weight: 600;
-    }
+.active{
+background:#000;
+color:#fff;
+font-weight:600
+}
 
-    .today {
-      border: 2px solid #fc4c02;
-    }
+.today{
+border:2px solid #fc4c02
+}
 
-    .dot {
-      position: absolute;
-      width: 6px;
-      height: 6px;
-      background: #fc4c02;
-      border-radius: 50%;
-      bottom: 4px;
-    }
+.day.active.today{
+background:#000;
+color:#fff;
+border:2px solid #fc4c02
+}
 
-    .day-wrap {
-      position: relative;
-      display: flex;
-      justify-content: center;
-    }
-  </style>
+.icon{
+position:absolute;
+font-size:16px
+}
+
+</style>
 </head>
 
 <body>
 
 <div id="app">
-  <h2 id="monthLabel"></h2>
-  <div class="weekdays">
-    <div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div>
-  </div>
-  <div class="calendar" id="calendar"></div>
+<h2 id="monthLabel"></h2>
+<div class="weekdays">
+<div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div>
+</div>
+<div class="calendar" id="calendar"></div>
 </div>
 
 <script>
-function save(k,v){localStorage.setItem(k,v)}
 function get(k){return localStorage.getItem(k)}
 
 async function loadActivities(){
-  const token = get('token');
+const token=get('token')
+const res=await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=100',{headers:{Authorization:`Bearer ${token}`}})
+const data=await res.json()
+if(!Array.isArray(data)) return []
+return data
+}
 
-  const res = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=100',{
-    headers:{Authorization:`Bearer ${token}`}
-  });
-
-  const data = await res.json();
-  if(!Array.isArray(data)) return [];
-  return data;
+function getIcon(type){
+if(type==='Run') return '🏃'
+if(type==='Ride') return '🚴'
+if(type==='WeightTraining') return '🏋️'
+return '●'
 }
 
 function renderCalendar(acts){
-  const cal = document.getElementById('calendar');
-  cal.innerHTML='';
+const cal=document.getElementById('calendar')
+cal.innerHTML=''
 
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
+const now=new Date()
+const year=now.getFullYear()
+const month=now.getMonth()
 
-  document.getElementById('monthLabel').innerText = now.toLocaleString('it',{month:'long',year:'numeric'});
+document.getElementById('monthLabel').innerText=now.toLocaleString('it',{month:'long',year:'numeric'})
 
-  const firstDay = new Date(year, month, 1);
-  let startDay = firstDay.getDay();
+const first=new Date(year,month,1)
+let start=first.getDay()
+start=start===0?7:start
 
-  // convert Sunday(0) -> 7
-  startDay = startDay === 0 ? 7 : startDay;
+const days=new Date(year,month+1,0).getDate()
 
-  const daysInMonth = new Date(year, month+1, 0).getDate();
+const map={}
+acts.forEach(a=>{
+const d=new Date(a.start_date_local)
+if(d.getMonth()===month && d.getFullYear()===year){
+map[d.getDate()]=a.type
+}
+})
 
-  const map = {};
-  acts.forEach(a=>{
-    const d = new Date(a.start_date_local);
-    if(d.getMonth()===month && d.getFullYear()===year){
-      map[d.getDate()] = true;
-    }
-  });
+for(let i=1;i<start;i++){
+cal.appendChild(document.createElement('div'))
+}
 
-  // padding before first Monday
-  for(let i=1;i<startDay;i++){
-    const empty = document.createElement('div');
-    cal.appendChild(empty);
-  }
+for(let i=1;i<=days;i++){
+const wrap=document.createElement('div')
+wrap.className='day-wrap'
 
-  for(let i=1;i<=daysInMonth;i++){
-    const wrap = document.createElement('div');
-    wrap.className = 'day-wrap';
+const el=document.createElement('div')
+el.className='day'
+el.innerText=i
 
-    const el = document.createElement('div');
-    el.className='day';
-    el.innerText=i;
+if(map[i]){
+el.classList.add('active')
 
-    if(map[i]){
-      el.classList.add('active');
-    }
+const icon=document.createElement('div')
+icon.className='icon'
+icon.innerText=getIcon(map[i])
+el.innerText=''
+el.appendChild(icon)
+}
 
-    if(i===now.getDate()){
-      el.classList.add('today');
-    }
+if(i===now.getDate()) el.classList.add('today')
 
-    wrap.appendChild(el);
-
-    if(map[i]){
-      const dot = document.createElement('div');
-      dot.className='dot';
-      wrap.appendChild(dot);
-    }
-
-    cal.appendChild(wrap);
-  }
+wrap.appendChild(el)
+cal.appendChild(wrap)
+}
 }
 
 async function start(){
-  const acts = await loadActivities();
-  renderCalendar(acts);
+const acts=await loadActivities()
+renderCalendar(acts)
 }
 
-window.onload = start;
+window.onload=start
 </script>
 
 </body>
