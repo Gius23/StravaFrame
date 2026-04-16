@@ -49,8 +49,6 @@
       cursor: pointer;
     }
 
-    button:hover { opacity: 0.9; }
-
     #app { display: none; padding: 20px; max-width: 600px; margin: auto; }
 
     .calendar {
@@ -96,7 +94,6 @@ const SCOPE = 'read,activity:read_all';
 
 function save(k,v){localStorage.setItem(k,v)}
 function get(k){return localStorage.getItem(k)}
-function clearAll(){localStorage.clear()}
 
 function goAuth(){
   const cid = document.getElementById('cid').value;
@@ -122,17 +119,52 @@ async function exchange(code){
   });
 
   const data = await res.json();
+
   save('token', data.access_token);
+  save('refresh', data.refresh_token);
+  save('expires', data.expires_at);
+}
+
+async function refreshToken(){
+  const res = await fetch('https://www.strava.com/oauth/token',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      client_id:get('cid'),
+      client_secret:get('cs'),
+      grant_type:'refresh_token',
+      refresh_token:get('refresh')
+    })
+  });
+
+  const data = await res.json();
+
+  save('token', data.access_token);
+  save('refresh', data.refresh_token);
+  save('expires', data.expires_at);
 }
 
 async function loadActivities(){
+  const expires = get('expires');
+
+  if(!expires || Date.now()/1000 > expires){
+    await refreshToken();
+  }
+
   const token = get('token');
 
   const res = await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=100',{
     headers:{Authorization:`Bearer ${token}`}
   });
 
-  return await res.json();
+  const data = await res.json();
+
+  if(!Array.isArray(data)){
+    console.error('Errore API:', data);
+    return [];
+  }
+
+  return data;
 }
 
 function renderCalendar(acts){
@@ -148,6 +180,7 @@ function renderCalendar(acts){
   const days = new Date(year, month+1, 0).getDate();
 
   const map = {};
+
   acts.forEach(a=>{
     const d = new Date(a.start_date_local);
     if(d.getMonth()===month && d.getFullYear()===year){
