@@ -32,14 +32,12 @@ gap:10px
 .day{
 width:44px;height:44px;border-radius:50%;
 display:flex;align-items:center;justify-content:center;
-font-size:14px;color:#444;position:relative
+font-size:16px;color:#444;position:relative
 }
 
 .active{background:#000;color:#fff}
 .today{border:2px solid #fc4c02}
 .day.active.today{background:#000;color:#fff;border:2px solid #fc4c02}
-
-.icon{position:absolute;font-size:16px}
 
 .login{display:flex;flex-direction:column;gap:10px}
 input,button{padding:10px;border-radius:8px;border:1px solid #ddd}
@@ -142,10 +140,13 @@ return await res.json()
 }
 
 function icon(t){
-if(t==='Run') return '🏃'
-if(t==='Ride') return '🚴'
-if(t.includes('Weight')) return '🏋️'
-return '•'
+t = t.toLowerCase()
+
+if(t.includes('run')) return '🏃'
+if(t.includes('ride') || t.includes('bike')) return '🚴'
+if(t.includes('weight') || t.includes('workout') || t.includes('gym')) return '🏋️'
+
+return '💪'
 }
 
 function render(acts){
@@ -184,7 +185,8 @@ el.className='day'
 
 if(map[i]){
 el.classList.add('active')
-el.innerHTML=icon(map[i][0])
+const types = map[i]
+el.innerHTML = types.map(t => icon(t)).join('')
 }else{
 el.innerText=i
 }
