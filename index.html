@@ -15,31 +15,23 @@ color:#fff
 }
 
 #app{
-max-width:420px;
+max-width:400px;
 margin:auto;
-padding:20px
+padding:18px
 }
 
 h2{
-text-align:center;
-margin-bottom:15px;
+text-align:left;
+margin-bottom:10px;
 font-weight:600;
-letter-spacing:-0.5px
-}
-
-.weekdays{
-display:grid;
-grid-template-columns:repeat(7,1fr);
-text-align:center;
-font-size:11px;
-color:#666;
-margin-bottom:12px
+letter-spacing:-0.5px;
+padding-left:4px;
 }
 
 .calendar{
 display:grid;
 grid-template-columns:repeat(7,1fr);
-gap:12px
+gap:11px
 }
 
 .day-wrap{
@@ -48,13 +40,13 @@ justify-content:center
 }
 
 .day{
-width:48px;
-height:48px;
+width:46px;
+height:46px;
 border-radius:50%;
 display:flex;
 align-items:center;
 justify-content:center;
-font-size:13px;
+font-size:12.5px;
 color:#aaa;
 position:relative;
 background:#1a1a1a;
@@ -68,7 +60,7 @@ transform:scale(1.05)
 .active{
 background:#fc4c02;
 color:#fff;
-box-shadow:0 0 10px rgba(252,76,2,0.6)
+box-shadow:0 0 8px rgba(252,76,2,0.6)
 }
 
 .today{
@@ -82,10 +74,10 @@ border:2px solid #fff
 
 .icons{
 position:absolute;
-bottom:-6px;
+bottom:-5px;
 display:flex;
 gap:2px;
-font-size:12px
+font-size:11px
 }
 
 .login{
@@ -95,10 +87,10 @@ gap:10px
 }
 
 input,button{
-padding:12px;
+padding:11px;
 border-radius:10px;
 border:none;
-font-size:14px
+font-size:13px
 }
 
 input{
@@ -127,9 +119,6 @@ font-weight:600;
 
 <div id="calendarUI" style="display:none">
 <h2 id="monthLabel"></h2>
-<div class="weekdays">
-<div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div>D</div>
-</div>
 <div class="calendar" id="calendar"></div>
 </div>
 
